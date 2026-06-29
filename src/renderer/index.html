@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Productivity Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Productivity Dashboard</h1>
+      <div class="tracking-control">
+        <label class="switch">
+          <input type="checkbox" id="tracking-toggle" />
+          <span class="slider"></span>
+        </label>
+        <span id="tracking-label">Tracking off</span>
+      </div>
+    </header>
+
+    <section class="range-bar">
+      <label>From <input type="date" id="range-start" /></label>
+      <label>To <input type="date" id="range-end" /></label>
+      <button id="apply-range">Apply</button>
+      <div class="spacer"></div>
+      <button id="export-btn" class="secondary">Export data…</button>
+      <button id="delete-all-btn" class="danger">Delete all data</button>
+    </section>
+
+    <main class="grid">
+      <section class="card" id="time-card">
+        <h2>Time by category</h2>
+        <div id="time-by-category" class="bars"></div>
+      </section>
+
+      <section class="card" id="wellbeing-card">
+        <h2>Energy &amp; focus</h2>
+        <canvas id="wellbeing-chart" width="440" height="220"></canvas>
+        <div class="legend">
+          <span class="dot energy"></span> Energy
+          <span class="dot focus"></span> Focus
+        </div>
+      </section>
+
+      <section class="card" id="insights-card">
+        <h2>Weekly insights</h2>
+        <ul id="insights-list"></ul>
+      </section>
+
+      <section class="card" id="tasks-card">
+        <h2>Tasks</h2>
+        <form id="task-form" class="task-form">
+          <input
+            type="text"
+            id="task-input"
+            placeholder="What did you complete?"
+            autocomplete="off"
+          />
+          <button type="submit">Add</button>
+        </form>
+        <p id="task-error" class="error" role="alert"></p>
+        <ul id="task-list" class="task-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="dashboard.js"></script>
+  </body>
+</html>
