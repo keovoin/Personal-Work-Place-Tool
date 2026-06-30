@@ -1,13 +1,39 @@
 # Hybrid Productivity Dashboard
 
-A privacy-focused, **offline-first** desktop productivity tool. It lives in your
-system tray, automatically tracks which application/window is active, lets you
-categorize that time, log completed tasks, record quick energy & focus
-check-ins, and turns all of it into a daily summary and a weekly report with
-locally-generated insights.
+A privacy-focused, **offline-first** productivity tool that tracks how you spend
+your time, lets you log tasks and record quick energy & focus check-ins, and
+turns it all into a daily summary plus a weekly report with locally-generated
+insights.
+
+It ships in **two forms** that share the same pure domain logic:
+
+- 🖥️ **Desktop app (Electron)** — lives in your system tray and tracks the
+  active window **automatically**. Data is stored in a local SQLite file.
+- 🌐 **Web app / PWA (`web/`)** — runs in any browser, installable and offline,
+  with **manual** time tracking. Data is stored in the browser (IndexedDB).
+  Deployable for free to GitHub Pages / Vercel / Netlify / Cloudflare.
 
 > **Privacy by design:** every feature works offline and all data stays on your
-> device in a local SQLite file. No account, no network calls, no telemetry.
+> device — local SQLite file (desktop) or IndexedDB (web). No account, no
+> network calls, no telemetry.
+
+> **Origin:** this project was built from the specification documents in the
+> repo root — [`requirements (2).md`](<requirements (2).md>),
+> [`design (2).md`](<design (2).md>), and [`tasks (2).md`](<tasks (2).md>).
+
+---
+
+## Two ways to run it — at a glance
+
+| | Desktop (Electron) | Web / PWA (`web/`) |
+|---|---|---|
+| **Time tracking** | Automatic (active-window polling) | Manual start/stop timer |
+| **Storage** | SQLite (`better-sqlite3`) | IndexedDB (`idb`) |
+| **Idle handling** | System idle via `powerMonitor` | Optional Idle Detection API |
+| **Install** | Build/launch locally (`npm start`) | Open a URL; installable PWA |
+| **Best when** | You want hands-off, automatic tracking | You want to open it anywhere, no install |
+
+Jump to: [Desktop quick start](#getting-started) · [Web app & hosting](#web-app-hosted-no-install--web)
 
 ---
 
@@ -34,35 +60,43 @@ The codebase follows a **pure core / thin shell** design so the logic is
 testable and platform-independent.
 
 ```
-src/
-├─ shared/        # Types, component interfaces, IPC channel names
-├─ core/          # Pure domain logic (no Electron, no I/O)
-│   ├─ timeTracker.ts      # accumulate / split / idle step function
-│   ├─ categorizer.ts      # rule resolution + bulk re-categorization
-│   ├─ taskLogger.ts       # validation + add/edit/delete
-│   ├─ checkInScheduler.ts # prompts, reissue, rating clamp
-│   ├─ aggregator.ts       # daily summary, weekly figures, range grouping
-│   ├─ insightEngine.ts    # local insight generation
-│   ├─ reports.ts          # composes figures + insights
-│   └─ dates.ts            # calendar-day helpers (UTC)
-├─ data/          # Persistence
-│   ├─ repository.ts       # SQLite (better-sqlite3) + startup recovery
-│   └─ serializer.ts       # pure export/import (round-trip safe)
-├─ main/          # Electron main process (the "shell")
-│   ├─ main.ts             # app wiring: repo, tray, IPC, schedulers
-│   ├─ trayController.ts   # tray menu + tracking flag
-│   ├─ timeTrackerService.ts # drives the pure poll loop
-│   ├─ schedulers.ts       # check-in / end-of-day timers
-│   ├─ notifications.ts    # daily-summary notification formatting
-│   └─ preload.ts          # context-isolated IPC bridge
-└─ renderer/      # UI (HTML/CSS/TS)
-    ├─ index.html / dashboard.ts  # dashboard
-    └─ checkin.html / checkin.ts  # check-in prompt
+.
+├─ requirements (2).md / design (2).md / tasks (2).md   # the original spec
+├─ src/
+│  ├─ shared/        # Types, component interfaces, IPC channel names
+│  ├─ core/          # Pure domain logic (no Electron, no I/O)
+│  │   ├─ timeTracker.ts      # accumulate / split / idle step function
+│  │   ├─ categorizer.ts      # rule resolution + bulk re-categorization
+│  │   ├─ taskLogger.ts       # validation + add/edit/delete
+│  │   ├─ checkInScheduler.ts # prompts, reissue, rating clamp
+│  │   ├─ aggregator.ts       # daily summary, weekly figures, range grouping
+│  │   ├─ insightEngine.ts    # local insight generation
+│  │   ├─ reports.ts          # composes figures + insights
+│  │   └─ dates.ts            # calendar-day helpers (UTC)
+│  ├─ data/          # Persistence
+│  │   ├─ repository.ts       # SQLite (better-sqlite3) + startup recovery
+│  │   └─ serializer.ts       # pure export/import (round-trip safe)
+│  ├─ main/          # Electron main process (the desktop "shell")
+│  │   ├─ main.ts             # app wiring: repo, tray, IPC, schedulers
+│  │   ├─ trayController.ts   # tray menu + tracking flag
+│  │   ├─ timeTrackerService.ts # drives the pure poll loop
+│  │   ├─ schedulers.ts       # check-in / end-of-day timers
+│  │   ├─ notifications.ts    # daily-summary notification formatting
+│  │   └─ preload.ts          # context-isolated IPC bridge
+│  └─ renderer/      # Desktop UI (HTML/CSS/TS)
+├─ web/              # Web/PWA shell — reuses ../src/core & ../src/shared
+│  ├─ src/store.ts            # IndexedDB storage (idb)
+│  ├─ src/tracker.ts          # manual tracker (reuses pure pollStep)
+│  ├─ src/main.ts             # UI wiring (tabs, dashboard, check-in)
+│  └─ vite.config.ts          # Vite + PWA + @core/@shared aliases
+├─ test/             # Vitest unit + property-based tests
+└─ .github/workflows/deploy-web.yml   # GitHub Pages deploy for web/
 ```
 
 **Why this matters:** all behavior lives in `core/` as side-effect-free
-functions, so it's covered by property-based tests and is reusable in a
-different shell (for example, a web version — see *Running it online* below).
+functions, so it's covered by property-based tests and reusable in a different
+shell — which is exactly how the [web app](#web-app-hosted-no-install--web)
+reuses it.
 
 ### Tech stack
 - **Electron** (desktop shell, tray, notifications)
