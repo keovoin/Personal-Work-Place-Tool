@@ -1,0 +1,17 @@
+# Netlify deployment config.
+# In Netlify: "Add new site" -> import this repo -> set Base directory to "web".
+# These settings are then auto-detected. Netlify serves from the domain root,
+# so BASE_PATH is "/".
+[build]
+  base = "web"
+  command = "BASE_PATH=/ npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA-style fallback (harmless for this multi-tab single page).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

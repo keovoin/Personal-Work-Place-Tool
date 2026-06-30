@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f1419" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Productivity Dashboard</title>
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Productivity Dashboard</h1>
+      <span class="badge" id="storage-badge" title="All data stays in your browser">Local-only · offline</span>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="track">Track</button>
+      <button class="tab" data-tab="dashboard">Dashboard</button>
+      <button class="tab" data-tab="data">Data</button>
+    </nav>
+
+    <!-- TRACK TAB -->
+    <main id="tab-track" class="tab-panel active">
+      <section class="card">
+        <h2>Time tracker</h2>
+        <div class="tracker">
+          <input type="text" id="track-label" placeholder="What are you working on?" autocomplete="off" />
+          <select id="track-category">
+            <option value="Work">Work</option>
+            <option value="Break">Break</option>
+            <option value="Distraction">Distraction</option>
+            <option value="Uncategorized">Uncategorized</option>
+          </select>
+          <button id="track-start">Start</button>
+          <button id="track-stop" class="secondary" disabled>Stop</button>
+        </div>
+        <div class="tracker-status">
+          <span id="track-elapsed">00:00:00</span>
+          <span id="track-current" class="muted"></span>
+          <span id="track-idle" class="idle-flag hidden">idle</span>
+        </div>
+        <label class="checkbox">
+          <input type="checkbox" id="idle-toggle" />
+          Auto-pause when I'm idle (uses the browser Idle Detection API)
+        </label>
+        <p id="idle-note" class="muted small"></p>
+      </section>
+
+      <section class="card">
+        <h2>Tasks</h2>
+        <form id="task-form" class="row-form">
+          <input type="text" id="task-input" placeholder="What did you complete?" autocomplete="off" />
+          <button type="submit">Add</button>
+        </form>
+        <p id="task-error" class="error" role="alert"></p>
+        <ul id="task-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Energy &amp; focus check-in</h2>
+        <button id="open-checkin">Check in now</button>
+        <span id="checkin-status" class="muted small"></span>
+      </section>
+    </main>
+
+    <!-- DASHBOARD TAB -->
+    <main id="tab-dashboard" class="tab-panel">
+      <section class="range-bar card">
+        <label>From <input type="date" id="range-start" /></label>
+        <label>To <input type="date" id="range-end" /></label>
+        <button id="apply-range">Apply</button>
+        <button id="range-week" class="secondary">Last 7 days</button>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Time by category</h2>
+          <div id="time-by-category" class="bars"></div>
+        </section>
+        <section class="card">
+          <h2>Energy &amp; focus</h2>
+          <canvas id="wellbeing-chart" width="440" height="220"></canvas>
+          <div class="legend">
+            <span class="dot energy"></span> Energy
+            <span class="dot focus"></span> Focus
+          </div>
+        </section>
+        <section class="card">
+          <h2>Weekly insights</h2>
+          <ul id="insights-list" class="list"></ul>
+        </section>
+        <section class="card">
+          <h2>Logged tasks</h2>
+          <ul id="dash-task-list" class="list"></ul>
+        </section>
+      </div>
+    </main>
+
+    <!-- DATA TAB -->
+    <main id="tab-data" class="tab-panel">
+      <section class="card">
+        <h2>Category rules</h2>
+        <p class="muted small">Map a label/app name to a category. Matching is case-insensitive and applies to existing records too.</p>
+        <form id="rule-form" class="row-form">
+          <input type="text" id="rule-app" placeholder="Label / app name" autocomplete="off" />
+          <select id="rule-category">
+            <option value="Work">Work</option>
+            <option value="Break">Break</option>
+            <option value="Distraction">Distraction</option>
+          </select>
+          <button type="submit">Add rule</button>
+        </form>
+        <ul id="rule-list" class="list"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Your data</h2>
+        <p class="muted small">Everything is stored locally in your browser (IndexedDB). Nothing is uploaded.</p>
+        <div class="row-form">
+          <button id="export-btn" class="secondary">Export JSON</button>
+          <button id="import-btn" class="secondary">Import JSON</button>
+          <input type="file" id="import-file" accept="application/json" class="hidden" />
+          <button id="delete-all-btn" class="danger">Delete all data</button>
+        </div>
+        <p id="data-status" class="muted small"></p>
+      </section>
+    </main>
+
+    <!-- CHECK-IN MODAL -->
+    <div id="checkin-modal" class="modal hidden">
+      <div class="modal-card">
+        <h2>How are you doing?</h2>
+        <fieldset>
+          <legend>Energy</legend>
+          <div class="rating" id="energy-rating"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Focus</legend>
+          <div class="rating" id="focus-rating"></div>
+        </fieldset>
+        <div class="modal-actions">
+          <button id="checkin-dismiss" class="secondary">Dismiss</button>
+          <button id="checkin-submit">Submit</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
