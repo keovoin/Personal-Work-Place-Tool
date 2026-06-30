@@ -128,51 +128,74 @@ client is wired into `core` / `data` / `main`.
 
 ---
 
-## Running it online (alternatives to local hosting)
+## Web app (hosted, no install) — `web/`
 
-This app is a **desktop application by necessity**: its headline feature —
-*automatic* tracking of the active OS window and system idle time — needs
-native OS access that a website running in a browser sandbox cannot have. So
-there is no way to take the current app as-is and "host it online" like a
-typical web app. There are, however, several legitimate paths depending on what
-you actually want:
+A **browser-based PWA** version lives in [`web/`](web/). It reuses the exact same
+pure domain core (`src/core`) as the desktop app, so categorization, task
+validation, check-in scheduling, aggregation, and insights behave identically.
+Only the "shell" differs:
 
-### 1. Distribute the desktop app (recommended, no servers)
-You don't host it — you publish installers and users download them. Use
-[`electron-builder`](https://www.electron.build/) to produce Windows/macOS/Linux
-binaries and attach them to **GitHub Releases** (free). Add auto-update via
-`electron-updater`. This keeps the full automatic-tracking feature set.
+| Concern | Desktop (Electron) | Web (`web/`) |
+|---------|--------------------|--------------|
+| Storage | SQLite (`better-sqlite3`) | **IndexedDB** (via `idb`) |
+| Time tracking | **Automatic** active-window polling | **Manual** start/stop timer (label + category) |
+| Idle | `powerMonitor` system idle | Optional [Idle Detection API](https://developer.mozilla.org/docs/Web/API/Idle_Detection_API) auto-pause (Chromium) |
+| Hosting | Download / install | Any static host; installable PWA, works offline |
 
-### 2. Build a hosted web/PWA version (drop or relax auto-tracking)
-Because the domain logic in `src/core` is pure and shell-independent, it can be
-reused in a browser app. You'd swap the "shell":
-- **Storage:** SQLite/`better-sqlite3` → `IndexedDB` (or `sql.js` in the browser).
-- **Tracking:** automatic OS window tracking → **manual** start/stop timers,
-  plus the browser [Page Visibility API](https://developer.mozilla.org/docs/Web/API/Page_Visibility_API)
-  and the experimental [Idle Detection API](https://developer.mozilla.org/docs/Web/API/Idle_Detection_API)
-  for rough activity/idle signals.
-- **Host it for free** on **Vercel**, **Netlify**, **Cloudflare Pages**, or
-  **GitHub Pages**. Make it a PWA so it's installable and works offline.
+> **Why manual tracking?** A browser tab can't see which *other* application
+> you're using, so the web version asks you to name what you're working on and
+> press Start. The underlying accumulate/split/idle logic is the same pure
+> `pollStep` function used by the desktop app.
 
-> Trade-off: a pure web app can't see *which other app* you're using, so
-> category time becomes manual rather than automatic.
+### Run the web app locally
+```bash
+cd web
+npm install
+npm run dev      # http://localhost:5173
+npm run build    # type-check + production build into web/dist
+npm run preview  # preview the production build
+```
 
-### 3. Hybrid: local agent + hosted dashboard
-Keep a tiny desktop/CLI agent that does the OS-level tracking locally, and have
-it sync records to a hosted backend + web dashboard you can open anywhere.
-- **Backend/DB options:** [Supabase](https://supabase.com),
-  [Firebase](https://firebase.google.com), [Neon](https://neon.tech), or
-  [PlanetScale](https://planetscale.com) (all have free tiers).
-- **Dashboard hosting:** Vercel / Netlify / Cloudflare Pages.
-- This gives you "access it online" while preserving automatic tracking — at
-  the cost of your data leaving the device (so add auth + encryption).
+### Deploy it for free (pick one)
 
-### 4. Cloud sync only
-Keep the desktop app as the tracker, but back up/sync the exported JSON to cloud
-storage (e.g. an S3/R2 bucket, or a Supabase table) so you can view/restore it
-from other machines.
+**GitHub Pages (zero config, in-repo)** — a workflow is included at
+[`.github/workflows/deploy-web.yml`](.github/workflows/deploy-web.yml):
+1. In the repo: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+2. Push to `main` (or run the workflow manually). It builds `web/` and publishes it.
+3. Your app goes live at `https://<your-username>.github.io/Personal-Work-Place-Tool/`.
 
-**Summary:** if you want zero servers and full automatic tracking → **option 1**.
-If "online" means *open it in a browser from anywhere* → **option 2** (manual
-tracking) or **option 3** (hybrid, keeps automatic tracking but needs a backend).
-Tell me which direction you prefer and I can scaffold it.
+**Vercel** — Import the repo, set **Root Directory = `web`**. Config is in
+[`web/vercel.json`](web/vercel.json) (builds with `BASE_PATH=/`).
+
+**Netlify** — "Add new site" → import repo. Config is in
+[`web/netlify.toml`](web/netlify.toml) (base directory `web`, publish `dist`).
+
+**Cloudflare Pages** — Framework preset **Vite**, root directory `web`, build
+command `BASE_PATH=/ npm run build`, output `dist`.
+
+> The base path defaults to `/Personal-Work-Place-Tool/` for GitHub Pages. For
+> root-domain hosts (Vercel/Netlify/Cloudflare) the provided configs set
+> `BASE_PATH=/` so assets resolve correctly.
+
+### Privacy (web)
+All data stays in your browser's IndexedDB — nothing is uploaded. Use the
+**Data** tab to export/import JSON or delete everything.
+
+---
+
+## Other ways to take it online
+
+If the web app's *manual* tracking isn't enough and you need automatic
+OS-level tracking while still accessing data online, these remain options:
+
+- **Distribute the desktop app:** publish installers via
+  [`electron-builder`](https://www.electron.build/) + GitHub Releases, with
+  `electron-updater` for auto-updates. Keeps full automatic tracking, no servers.
+- **Hybrid (local agent + hosted dashboard):** a small local tracker syncs
+  records to a hosted backend ([Supabase](https://supabase.com),
+  [Firebase](https://firebase.google.com), [Neon](https://neon.tech)) with a web
+  dashboard you open anywhere. Preserves automatic tracking, but data leaves the
+  device — add auth + encryption.
+- **Cloud sync only:** keep the desktop tracker and back up the exported JSON to
+  cloud storage so you can view/restore it elsewhere.
+
