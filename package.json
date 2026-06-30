@@ -1,0 +1,30 @@
+{
+  "name": "hybrid-productivity-dashboard",
+  "version": "1.0.0",
+  "description": "Privacy-focused, offline-first desktop productivity dashboard with automatic time tracking, task logging, energy check-ins, and local AI insights.",
+  "main": "dist/main/main.js",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:renderer": "tsc -p tsconfig.renderer.json && npm run copy:assets",
+    "copy:assets": "node -e \"const fs=require('fs');fs.mkdirSync('dist/renderer',{recursive:true});for(const f of ['index.html','checkin.html','styles.css'])fs.copyFileSync('src/renderer/'+f,'dist/renderer/'+f)\"",
+    "build:all": "npm run build && npm run build:renderer",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "start": "npm run build:all && electron .",
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "active-win": "^8.2.1",
+    "better-sqlite3": "^11.8.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.5",
+    "electron": "^33.3.1",
+    "fast-check": "^3.23.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  }
+}

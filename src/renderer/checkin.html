@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Check-In</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="checkin-body">
+    <main class="checkin">
+      <h1>How are you doing?</h1>
+
+      <fieldset>
+        <legend>Energy</legend>
+        <div class="rating" id="energy-rating" data-name="energy"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Focus</legend>
+        <div class="rating" id="focus-rating" data-name="focus"></div>
+      </fieldset>
+
+      <div class="checkin-actions">
+        <button id="checkin-dismiss" class="secondary">Dismiss</button>
+        <button id="checkin-submit">Submit</button>
+      </div>
+    </main>
+
+    <script type="module" src="checkin.js"></script>
+  </body>
+</html>
